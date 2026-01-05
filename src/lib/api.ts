@@ -1,7 +1,8 @@
-import {Post} from "@/models/post";
+import { Post } from "@/models/post";
 import he from 'he';
-import {PostResponse} from "@/interfaces/post-response";
+import { PostResponse } from "@/interfaces/post-response";
 import { LinkMeta } from "@/models/link-meta";
+import { ThreadPost } from '@/interfaces/thread-post';
 
 function escapeWithoutAmpercent(str: string): string {
     return str.replaceAll('quot;', '&quot;')
@@ -22,7 +23,7 @@ export async function getOg(url: string): Promise<LinkMeta> {
         if (!res.ok) {
             throw new Error(`Failed to fetch post: ${res.status} ${res.statusText}`);
         }
-        const data = await res.json() as LinkMeta;        
+        const data = await res.json() as LinkMeta;
         return data;
 
     } catch (error) {
@@ -33,7 +34,16 @@ export async function getOg(url: string): Promise<LinkMeta> {
 
 export async function getPost(id: number): Promise<Post> {
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_DB_API_URL}/news/${id}`);
+        const dbApiUrl = process.env.NEXT_PUBLIC_DB_API_URL;
+
+        if (!dbApiUrl) {
+            throw new Error("NEXT_PUBLIC_DB_API_URL 환경 변수가 설정되지 않았습니다.");
+        }
+
+        const endpoint = `${dbApiUrl}/news/${id}`;
+        console.log(`[getPost] Fetching post from: ${endpoint}`);
+
+        const res = await fetch(endpoint, { cache: 'no-store' });
         if (!res.ok) {
             throw new Error(`Failed to fetch post: ${res.status} ${res.statusText}`);
         }
@@ -44,21 +54,19 @@ export async function getPost(id: number): Promise<Post> {
 
         if (!minioBaseUrl) {
             console.error("MINIO_BASE_URL 환경 변수가 설정되지 않았습니다.");
-            // 적절한 오류 처리 또는 기본값 설정
-            return {} as Post;
         }
 
         return {
-                ...post,
-                title: he.decode(escapeWithoutAmpercent(post.title)),
-                content: he.decode(escapeWithoutAmpercent(post.content)),
-                postdate: new Date(post.postdate),
-                //thumbnail: post.thumbnail ? `${post.thumbnail}` : '/assets/images/img.png',            
+            ...post,
+            title: he.decode(post.title),
+            content: he.decode(post.content),
+            postdate: new Date(post.postdate),
+            //thumbnail: post.thumbnail ? `${post.thumbnail}` : '/assets/images/img.png',            
         };
 
     } catch (error) {
-        console.log(error);
-        return {} as Post;
+        console.error('[getPost] 게시글 조회 중 오류 발생', error);
+        throw error;
     }
 }
 
@@ -68,7 +76,17 @@ export async function getAllPosts(page: number = 1, limit: number = 20): Promise
     try {
         //const dataSourceInstance = await getDataSource();
         const offset = (page - 1) * limit;
-        const res = await fetch(`${process.env.NEXT_PUBLIC_DB_API_URL}/news?offset=${offset}&limit=${limit}`);
+        const dbApiUrl = process.env.NEXT_PUBLIC_DB_API_URL;
+
+        if (!dbApiUrl) {
+            console.error("NEXT_PUBLIC_DB_API_URL 환경 변수가 설정되지 않았습니다.");
+            return { posts: [], totalCount: 0 };
+        }
+
+        const endpoint = `${dbApiUrl}/news?offset=${offset}&limit=${limit}`;
+        console.log(`[getAllPosts] Fetching posts from: ${endpoint}`);
+
+        const res = await fetch(endpoint, { cache: 'no-store' });
         if (!res.ok) {
             throw new Error(`Failed to fetch news: ${res.status} ${res.statusText}`);
         }
@@ -124,7 +142,7 @@ export async function getAllPosts(page: number = 1, limit: number = 20): Promise
         if (!minioBaseUrl) {
             console.error("MINIO_BASE_URL 환경 변수가 설정되지 않았습니다.");
             // 적절한 오류 처리 또는 기본값 설정
-            return {posts: [], totalCount: 0};
+            return { posts: [], totalCount: 0 };
         }
 
         return {
@@ -139,6 +157,45 @@ export async function getAllPosts(page: number = 1, limit: number = 20): Promise
 
     } catch (error) {
         console.log(error);
-        return {posts: [], totalCount: 0};
+        return { posts: [], totalCount: 0 };
     }
 }
+
+export async function getAllPostIds(): Promise<PostResponse> {
+
+    try {
+        //const dataSourceInstance = await getDataSource();
+        console.log(`${process.env.NEXT_PUBLIC_DB_API_URL}/news/ids`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_DB_API_URL}/news/ids`);
+        if (!res.ok) {
+            throw new Error(`Failed to fetch news: ${res.status} ${res.statusText}`);
+        }
+        const data = await res.json();
+        let posts: Post[] = data.news;
+        const totalCount = data.totalCount;
+
+        return {
+            posts: posts.map(post => ({
+                ...post,
+            })), totalCount: totalCount
+        };
+
+    } catch (error) {
+        console.log(error);
+        return { posts: [], totalCount: 0 };
+    }
+}
+
+export const fetchThreads = async (): Promise<ThreadPost[]> => {
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_DB_API_URL}/news/sns}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch threads');
+        }
+        const data = await response.json();
+        return data.posts;
+    } catch (error) {
+        console.error('Error fetching threads:', error);
+        return [];
+    }
+};

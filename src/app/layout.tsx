@@ -1,8 +1,10 @@
+'use client';
+
 import Footer from "@/app/_components/footer";
 import { CMS_NAME, HOME_OG_IMAGE_URL } from "@/lib/constants";
-import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import cn from "classnames";
+import { useMetadataStore } from '@/store/metadataStore';
 
 import "./globals.css";
 
@@ -15,51 +17,24 @@ const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID; // 그래�
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
-  title: `먼데이 타이거즈`,
-  description: `월요일에 찾아오는 기아 타이거즈 기록 이야기`,
-  openGraph: {
-    images: [HOME_OG_IMAGE_URL],
-  },
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { title, description, openGraph } = useMetadataStore();
+
   return (
     <html lang="en">
       <head>
-        <link
-          rel="apple-touch-icon"
-          sizes="180x180"
-          href="/favicon/apple-touch-icon.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="32x32"
-          href="/favicon/favicon-32x32.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="16x16"
-          href="/favicon/favicon-16x16.png"
-        />
-        <link rel="manifest" href="/favicon/site.webmanifest" />
-        <link
-          rel="mask-icon"
-          href="/favicon/safari-pinned-tab.svg"
-          color="#000000"
-        />
-        <link rel="shortcut icon" href="/favicon/favicon.ico" />
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <meta property="og:title" content={openGraph.title} />
+        <meta property="og:description" content={openGraph.description} />
+        <meta property="og:image" content={openGraph.images} />
+  
+        
         <meta name="msapplication-TileColor" content="#000000" />
-        <meta
-          name="msapplication-config"
-          content="/favicon/browserconfig.xml"
-        />
         <meta name="theme-color" content="#000" />
         <link rel="alternate" type="application/rss+xml" href="/feed.xml" />
         {GA_MEASUREMENT_ID && (

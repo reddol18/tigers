@@ -15,7 +15,7 @@ const Tags = ({ tags, category, on_mobile }: Props) => {
             'hidden xl:flex': !on_mobile,
         })}>
       {tags.length > 0 && <div className="text-sm mr-1 lg:text-md font-bold lg:mr-3">{tags}</div>}
-      <div className="text-xs lg:text-sm">{category}</div>
+      <div className="text-xs lg:text-sm font-semibold">{category}</div>
     </div>
   );
 };

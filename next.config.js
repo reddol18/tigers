@@ -2,7 +2,7 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
-    output: 'export',
+    trailingSlash: true, // 모든 경로에 슬래시 추가 (GitHub Pages 호환)
     // 여기에 Next.js 설정을 추가합니다.
     // 예시: images 설정
     images: {

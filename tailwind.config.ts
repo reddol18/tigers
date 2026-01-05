@@ -37,6 +37,16 @@ const config: Config = {
         sm: "0 5px 10px rgba(0, 0, 0, 0.12)",
         md: "0 8px 30px rgba(0, 0, 0, 0.12)",
       },
+      container: {
+        center: true, // container를 가운데 정렬
+        padding: "2rem", // 기본 패딩 설정
+        screens: {
+          sm: "100%", // 작은 화면에서는 전체 너비
+          md: "768px", // 중간 화면에서는 768px
+          lg: "1024px", // 큰 화면에서는 1024px
+          xl: "1024px", // 매우 큰 화면에서는 1280px
+        },
+      },
     },
   },
   plugins: [],

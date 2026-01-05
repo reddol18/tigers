@@ -4,9 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "set NODE_ENV=local && next dev",
-    "build": "set NODE_ENV=production && next build",
-    "start": "set NODE_ENV=production && next start",
-    "deploy": "touch out/.nojekyll && cp CNAME out/CNAME && gh-pages -d out -b gh-pages --dotfiles"
+    "build": "cross-env NODE_ENV=production next build",
+    "postbuild": "next-sitemap",
+    "start": "cross-env NODE_ENV=production next start",    
+    "ssg-build": "set NODE_ENV=production && npm run backup-pages && next build && npm run merge-pages && next-sitemap",
+    "backup-pages": "rm -rf out_backup2 && mv out_backup out_backup2 && cp -r out/post out_backup",
+    "merge-pages": "cp -r out_backup/* out/post",
+    "deploy": "npm run copy-sitemap && touch out/.nojekyll && cp CNAME out/CNAME && gh-pages -d out -b gh-pages --dotfiles",
+    "copy-sitemap": "cp public/sitemap*.xml public/robots.txt out/"
   },
   "homepage": "https://tigers.reddol18.pe.kr",
   "dependencies": {
@@ -17,6 +22,7 @@
     "he": "^1.2.0",
     "html-entities": "^2.6.0",
     "next": "15.0.2",
+    "next-sitemap": "^4.2.3",
     "pg": "^8.16.0",
     "react": "19.0.0-rc-02c0e824-20241028",
     "react-dom": "19.0.0-rc-02c0e824-20241028",
@@ -26,7 +32,8 @@
     "remark": "^15.0.1",
     "remark-gfm": "^4.0.1",
     "remark-html": "^16.0.1",
-    "typeorm": "^0.3.24"
+    "typeorm": "^0.3.24",
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@types/he": "^1.2.3",
